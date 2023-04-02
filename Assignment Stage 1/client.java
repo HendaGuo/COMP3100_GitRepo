@@ -27,14 +27,14 @@ public class client {
 
             // Step 7: Receive OK
             str = (String) din.readLine();
-            System.out.println("message= " + str);
+            // System.out.println("message= " + str);
 
             int jobID = 0;
             int pre_core = 0;
             String serverType = "";
             int serverID = 0;
             int typeCount = 0; // number of server of same type
-            Boolean run = true;
+            Boolean lrr = true;
 
             // Step 8
             while (!str.equals("NONE")) {
@@ -46,21 +46,21 @@ public class client {
                 // Step 10: Receive JOBN & Identify the largest server type
                 // check if JOBN/JCPL
                 str = (String) din.readLine();
-                System.out.println("message= " + str);
+                // System.out.println("message= " + str);
                 String[] job = str.split(" ");
                 // JOBN submitTime jobID estRuntime core memory disk
 
                 if (job[0].equals("JOBN")) {
                     jobID = Integer.parseInt(str.split(" ")[2]);
 
-                    if (run) {
+                    if (lrr) {
                         // Step 11: Send a GETS message
                         dout.write(("GETS All\n").getBytes());
                         dout.flush();
 
                         // Step 12: Receive DATA nRecs recSize
                         str = (String) din.readLine();
-                        System.out.println("message= " + str);
+                        // System.out.println("message= " + str);
                         int nserver = Integer.parseInt(str.split(" ")[1]);
 
                         // Step 13: Send OK
@@ -70,7 +70,7 @@ public class client {
                         // Step 14
                         for (int i = 0; i < nserver; i++) {
                             str = (String) din.readLine(); // read \n everytime its looped
-                            System.out.println("message= " + str);
+                            // System.out.println("message= " + str);
 
                             String temp[] = str.split(" ");
 
@@ -86,6 +86,7 @@ public class client {
                                 }
                             }
                         }
+                        lrr = false;
 
                         // Step 18: Send OK
                         dout.write(("OK\n").getBytes());
@@ -93,14 +94,14 @@ public class client {
 
                         // Step 19: Receive .
                         str = (String) din.readLine();
-                        System.out.println("message= " + str);
-                        run = false;
+                        // System.out.println("message= " + str);                        
                     }
 
                     // Step 20: Schedule a job (IF JOBN -> SCHD)
                     dout.write((String.format("SCHD %d %s %d\n", jobID, serverType, serverID)).getBytes());
                     dout.flush();
                     
+                    // Assuming the next serverID is increment of one
                     serverID++;
                     if(serverID>typeCount-1){
                         serverID=0;
@@ -108,7 +109,7 @@ public class client {
 
                     // Receive OK
                     str = (String) din.readLine();
-                    System.out.println("message= " + str);
+                    // System.out.println("message= " + str);
                 }
             }
 
@@ -118,7 +119,7 @@ public class client {
 
             // Step 24: Receive QUIT
             str = (String) din.readLine();
-            System.out.println("message= " + str);
+            // System.out.println("message= " + str);
 
             // Step 26: Close the socket
             dout.close();
