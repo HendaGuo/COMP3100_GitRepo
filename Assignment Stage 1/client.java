@@ -5,7 +5,7 @@ public class client {
     public static void main(String[] args) {
         try {
             /*
-             * Step 1: reate a socket
+             * Step 1: Create a socket
              * Step 2: Initialise input and output streams associated with the socket
              * Step 3: Connect ds-server
              */
@@ -29,6 +29,13 @@ public class client {
             str = (String) din.readLine();
             System.out.println("message= " + str);
 
+            int jobID = 0;
+            int pre_core = 0;
+            String serverType = "";
+            int serverID = 0;
+            int typeCount = 0; // number of server of same type
+            Boolean run = true;
+
             // Step 8
             while (!str.equals("NONE")) {
 
@@ -41,50 +48,63 @@ public class client {
                 str = (String) din.readLine();
                 System.out.println("message= " + str);
                 String[] job = str.split(" ");
+                // JOBN submitTime jobID estRuntime core memory disk
 
                 if (job[0].equals("JOBN")) {
-                    int jobID = Integer.parseInt(str.split(" ")[2]);
+                    jobID = Integer.parseInt(str.split(" ")[2]);
 
-                    // Step 11: Send a GETS message
-                    dout.write(("GETS All\n").getBytes());
-                    dout.flush();
+                    if (run) {
+                        // Step 11: Send a GETS message
+                        dout.write(("GETS All\n").getBytes());
+                        dout.flush();
 
-                    // Step 12: Receive DATA nRecs recSize
-                    str = (String) din.readLine();
-                    System.out.println("message= " + str);
-                    int nserver = Integer.parseInt(str.split(" ")[1]);
-
-                    // Step 13: Send OK
-                    dout.write(("OK\n").getBytes());
-                    dout.flush();
-
-                    // Step 14
-                    int pre_core = 0;
-                    String serverType = "";
-                    int serverID = 0;
-                    for (int i = 0; i < nserver; i++) {
-                        str = (String) din.readLine(); // read \n everytime its looped
+                        // Step 12: Receive DATA nRecs recSize
+                        str = (String) din.readLine();
                         System.out.println("message= " + str);
-                        String temp[] = str.split(" ");
-                        int ncore = Integer.parseInt(temp[4]);
+                        int nserver = Integer.parseInt(str.split(" ")[1]);
 
-                        if (ncore >= pre_core) {
-                            serverType = (temp[0]);
-                            serverID = Integer.parseInt(temp[1]);
+                        // Step 13: Send OK
+                        dout.write(("OK\n").getBytes());
+                        dout.flush();
+
+                        // Step 14
+                        for (int i = 0; i < nserver; i++) {
+                            str = (String) din.readLine(); // read \n everytime its looped
+                            System.out.println("message= " + str);
+
+                            String temp[] = str.split(" ");
+
+                            int ncore = Integer.parseInt(temp[4]);
+                            if (ncore > pre_core) {
+                                typeCount = 1;
+                                serverType = temp[0];
+                                serverID = Integer.parseInt(temp[1]);
+                                pre_core = ncore;
+                            } else {
+                                if (serverType.equals(temp[0])) {
+                                    typeCount++;
+                                }
+                            }
                         }
+
+                        // Step 18: Send OK
+                        dout.write(("OK\n").getBytes());
+                        dout.flush();
+
+                        // Step 19: Receive .
+                        str = (String) din.readLine();
+                        System.out.println("message= " + str);
+                        run = false;
                     }
-
-                    // Step 18: Send OK
-                    dout.write(("OK\n").getBytes());
-                    dout.flush();
-
-                    // Step 19: Receive .
-                    str = (String) din.readLine();
-                    System.out.println("message= " + str);
 
                     // Step 20: Schedule a job (IF JOBN -> SCHD)
                     dout.write((String.format("SCHD %d %s %d\n", jobID, serverType, serverID)).getBytes());
                     dout.flush();
+                    
+                    serverID++;
+                    if(serverID>typeCount-1){
+                        serverID=0;
+                    }
 
                     // Receive OK
                     str = (String) din.readLine();
